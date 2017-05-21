@@ -1,20 +1,50 @@
 var stdin = process.stdin;
-stdin.setRawMode(true);
-stdin.resume();
-stdin.setEncoding('utf8');
+// stdin.setRawMode(true);
+// stdin.resume();
+// stdin.setEncoding('utf8');
 var keys = [];
-var ports;
+var ports = [];
+var serialData = [];
 var serialport = require('serialport');
-//var SerialPort = serialport.SerialPort;
- 
+var SerialPort = serialport.SerialPort;
+
+
+
 // list serial ports:
 serialport.list(function (err, serialports) {
-  serialports.forEach(function(port) {
-    console.log(port.comName);
-  });
+    serialports.forEach(function (port) {
 
-  ports = serialports;
+        var currPort = new SerialPort(port.comName, {
+            baudRate: 9600,
+            // look for return and newline at the end of each data packet:
+            parser: serialport.parsers.readline("\n")
+        });
+
+        currPort.on('open', showPortOpen);
+        currPort.on('data', sendSerialData);
+        currPort.on('close', showPortClose);
+        currPort.on('error', showError);
+
+        console.log(port.comName);
+        ports.push(currPort);
+    });
 });
+
+function showPortOpen() {
+    //console.log('port open. Data rate: ');
+}
+
+function sendSerialData(data) {
+    serialData.push(data);
+}
+
+function showPortClose() {
+    //console.log('port closed.');
+}
+
+function showError(error) {
+    //console.log('Serial port error: ' + error);
+}
 
 //process.exit('0')
 
@@ -48,7 +78,7 @@ var http = require('http');
 http.createServer(function (request, response) {
     response.writeHead(200, { "Content-Type": "application/json" });
     //request.pipe(response);
-    response.end(JSON.stringify(ports));
-}).listen(8080, function(){
+    response.end(JSON.stringify(Object.assign({ ports: ports }, { serialData: serialData })));
+}).listen(8080, function () {
     console.log('Server running');
 });
