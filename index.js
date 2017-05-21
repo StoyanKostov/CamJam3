@@ -42,11 +42,11 @@ stdin.on('data', function (key) {
 });
 
 // // Test
-// var http = require('http');
-// http.createServer(function (request, response) {
-//     response.writeHead(200, { "Content-Type": "application/json" });
-//     //request.pipe(response);
-//     response.end(JSON.stringify(keys));
-// }).listen(8080, function(){
-//     console.log('Server running');
-// });
+var http = require('http');
+http.createServer(function (request, response) {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    //request.pipe(response);
+    response.end(JSON.stringify(ports));
+}).listen(8080, function(){
+    console.log('Server running');
+});
