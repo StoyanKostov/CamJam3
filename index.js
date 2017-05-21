@@ -3,15 +3,17 @@ stdin.setRawMode(true);
 stdin.resume();
 stdin.setEncoding('utf8');
 var keys = [];
-
+var ports;
 var serialport = require('serialport');
 //var SerialPort = serialport.SerialPort;
  
 // list serial ports:
-serialport.list(function (err, ports) {
-  ports.forEach(function(port) {
+serialport.list(function (err, serialports) {
+  serialports.forEach(function(port) {
     console.log(port.comName);
   });
+
+  ports = serialports;
 });
 
 //process.exit('0')
