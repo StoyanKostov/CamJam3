@@ -4,6 +4,18 @@ stdin.resume();
 stdin.setEncoding('utf8');
 var keys = [];
 
+var serialport = require('serialport');
+//var SerialPort = serialport.SerialPort;
+ 
+// list serial ports:
+serialport.list(function (err, ports) {
+  ports.forEach(function(port) {
+    console.log(port.comName);
+  });
+});
+
+//process.exit('0')
+
 stdin.on('data', function (key) {
     //var fs = require('fs');
 
@@ -29,12 +41,12 @@ stdin.on('data', function (key) {
     if (key == '\u0003') { process.exit(); }    // ctrl-c
 });
 
-// Test
-var http = require('http');
-http.createServer(function (request, response) {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    //request.pipe(response);
-    response.end(JSON.stringify(keys));
-}).listen(8080, function(){
-    console.log('Server running');
-});
+// // Test
+// var http = require('http');
+// http.createServer(function (request, response) {
+//     response.writeHead(200, { "Content-Type": "application/json" });
+//     //request.pipe(response);
+//     response.end(JSON.stringify(keys));
+// }).listen(8080, function(){
+//     console.log('Server running');
+// });
