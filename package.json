@@ -1,0 +1,23 @@
+{
+  "name": "camjam3",
+  "version": "1.0.0",
+  "description": "CamJam3 robot",
+  "main": "index.js",
+  "dependencies": {
+    "pi-gpio": "^0.0.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StoyanKostov/CamJam3.git"
+  },
+  "author": "Stoyan Kostov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/StoyanKostov/CamJam3/issues"
+  },
+  "homepage": "https://github.com/StoyanKostov/CamJam3#readme"
+}
