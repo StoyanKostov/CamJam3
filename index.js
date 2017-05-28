@@ -1,5 +1,5 @@
-
-const STATE = { HIGH: 1, LOW: 0 },
+let gpio = require("rpi-gpio");
+const STATE = { HIGH: true, LOW: false },
     MOTORS = {
         LEFT: [7, 8],
         RIGHT: [9, 10]
@@ -8,16 +8,16 @@ let GPIOs = [...MOTORS.LEFT, ...MOTORS.RIGHT],
     stdin = process.stdin,
     move = {
         forwards: (motor) => {
-            gpio.write(motor[0], STATE.LOW);
-            gpio.write(motor[1], STATE.HIGH);
+            gpio.write(motor[0], STATE.LOW, (err) => { if (err) throw err; });
+            gpio.write(motor[1], STATE.HIGH, (err) => { if (err) throw err; });
         },
         backwards: (motor) => {
-            gpio.write(motor[0], STATE.HIGH);
-            gpio.write(motor[1], STATE.LOW);
+            gpio.write(motor[0], STATE.HIGH, (err) => { if (err) throw err; });
+            gpio.write(motor[1], STATE.LOW, (err) => { if (err) throw err; });
         },
         stop: (motor) => {
-            gpio.write(motor[0], STATE.LOW);
-            gpio.write(motor[1], STATE.LOW);
+            gpio.write(motor[0], STATE.LOW, (err) => { if (err) throw err; });
+            gpio.write(motor[1], STATE.LOW, (err) => { if (err) throw err; });
         }
     };
 
@@ -70,7 +70,7 @@ function movementHandler() {
 function openGPIOs(...GPIOs) {
     var promises = GPIOs.map(pinNumber => {
         return new Promise((resolve, reject) => {
-            gpio.open(pinNumber, "output", function (err) {
+            gpio.setup(pinNumber, gpio.DIR_OUT, function (err) {
                 if (err) {
                     reject(err);
                 }
