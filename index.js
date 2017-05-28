@@ -1,84 +1,91 @@
-var stdin = process.stdin;
-// stdin.setRawMode(true);
-// stdin.resume();
-// stdin.setEncoding('utf8');
-var keys = [];
-var ports = [];
-var serialData = [];
-var serialport = require('serialport');
-var SerialPort = serialport.SerialPort;
 
+const STATE = { HIGH: 1, LOW: 0 },
+    MOTORS = {
+        LEFT: [7, 8],
+        RIGHT: [9, 10]
+    };
+let GPIOs = [...MOTORS.LEFT, ...MOTORS.RIGHT],
+    stdin = process.stdin,
+    move = {
+        forwards: (motor) => {
+            gpio.write(motor[0], STATE.LOW);
+            gpio.write(motor[1], STATE.HIGH);
+        },
+        backwards: (motor) => {
+            gpio.write(motor[0], STATE.HIGH);
+            gpio.write(motor[1], STATE.LOW);
+        },
+        stop: (motor) => {
+            gpio.write(motor[0], STATE.LOW);
+            gpio.write(motor[1], STATE.LOW);
+        }
+    };
 
+stdin.setRawMode(true);
+stdin.resume();
+stdin.setEncoding('utf8');
 
-// list serial ports:
-serialport.list(function (err, serialports) {
-    serialports.forEach(function (port) {
+/// Main logic
+openGPIOs(...GPIOs)
+    .then(movementHandler)
+    .catch(err => shutDown(...GPIOs));
 
-        var currPort = new SerialPort(port.comName, {
-            baudRate: 9600,
-            // look for return and newline at the end of each data packet:
-            parser: serialport.parsers.readline("\n")
-        });
+/// Helper functions
 
-        currPort.on('open', showPortOpen);
-        currPort.on('data', sendSerialData);
-        currPort.on('close', showPortClose);
-        currPort.on('error', showError);
+// Handles movemnets
+function movementHandler() {
+    let currKey;
+    stdin.on('data', function (key) {
+        if (key === currKey) {
+            return;
+        }
+        currKey = key;
 
-        console.log(port.comName);
-        ports.push(currPort);
+        // Up
+        if (key == '\u001B\u005B\u0041') {
+            move.forwards(MOTORS.LEFT);
+            move.forwards(MOTORS.RIGHT);
+        }
+        // Right
+        if (key == '\u001B\u005B\u0043') {
+            move.stop(MOTORS.LEFT);
+            move.forwards(MOTORS.RIGHT);
+        }
+        // Down
+        if (key == '\u001B\u005B\u0042') {
+            move.stop(MOTORS.LEFT);
+            move.stop(MOTORS.RIGHT);
+        }
+        // Left
+        if (key == '\u001B\u005B\u0044') {
+            move.forwards(MOTORS.LEFT);
+            move.stop(MOTORS.RIGHT);
+        }
+
+        if (key == '\u0003') { shutDown(...GPIOs); }    // ctrl-c
     });
-});
-
-function showPortOpen() {
-    //console.log('port open. Data rate: ');
 }
 
-function sendSerialData(data) {
-    serialData.push(data);
+// Open GPIOs
+function openGPIOs(...GPIOs) {
+    var promises = GPIOs.map(pinNumber => {
+        return new Promise((resolve, reject) => {
+            gpio.open(pinNumber, "output", function (err) {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            });
+        })
+    });
+
+    return Promise.all(promises);
+};
+
+// Gracefull shutdown
+function shutDown(...GPIOs) {
+    // Close all pin numbers
+    GPIOs.forEach(pinNumber => gpio.close(pinNumber));
+    // Exit nodejs process
+    process.exit();
 }
-
-function showPortClose() {
-    //console.log('port closed.');
-}
-
-function showError(error) {
-    //console.log('Serial port error: ' + error);
-}
-
-//process.exit('0')
-
-stdin.on('data', function (key) {
-    //var fs = require('fs');
-
-    // fs.appendFile('message.txt', key + '\n', function (err) {
-    //     if (err) throw err;
-    //     console.log('Saved!');
-    // });
-    keys.push({ 'key': key });
-    console.log(keys);
-    // if (key == '\u001B\u005B\u0041') {
-    //     process.stdout.write('up');
-    // }
-    // if (key == '\u001B\u005B\u0043') {
-    //     process.stdout.write('right');
-    // }
-    // if (key == '\u001B\u005B\u0042') {
-    //     process.stdout.write('down');
-    // }
-    // if (key == '\u001B\u005B\u0044') {
-    //     process.stdout.write('left');
-    // }
-
-    if (key == '\u0003') { process.exit(); }    // ctrl-c
-});
-
-// // Test
-var http = require('http');
-http.createServer(function (request, response) {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    //request.pipe(response);
-    response.end(JSON.stringify(Object.assign({ ports: ports }, { serialData: serialData })));
-}).listen(8080, function () {
-    console.log('Server running');
-});
